@@ -46,11 +46,18 @@ def get_contours_by_image(image_route, thresh_bottom):
     gray_shape = cv.cvtColor(shape, cv.COLOR_BGR2GRAY)
     _, shape_thresh = cv.threshold(gray_shape, thresh_bottom, 255, cv.THRESH_BINARY_INV)
     shape_contours, _ = cv.findContours(shape_thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    return shape_contours[0]
+
+    if shape_contours:
+        return shape_contours[0]
+    else:
+        return []  # Return an empty list if no contours are found
 
 # Function to check if a contour matches a predefined shape's contour
 def does_contour_match_shapes_contour(contour_shape, contour):
-    return cv.matchShapes(contour_shape, contour, 1, 0.0) < 0.03
+    if len(contour_shape) > 0 and len(contour) > 0:  # Check if both contours are non-empty
+        return cv.matchShapes(contour_shape, contour, 1, 0.0) < 0.03
+    else:
+        return False  # If either contour is empty, consider them not matching
 
 # Function to display an invalid shape on the original image
 def display_invalid_shape(contour, original_image):
