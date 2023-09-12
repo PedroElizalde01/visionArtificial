@@ -1,9 +1,6 @@
 import cv2 as cv
+import constants
 
-WEBCAM_ID = 0  # on Macbook is 1, on other OS is 0
-CIRCLE_PATH = './circle.png'
-SQUARE_PATH = './square.png'
-TRIANGLE_PATH = './triangle.png'
 
 # Function to create a window with optional width and height
 def create_window(name, width=600, height=337):
@@ -26,7 +23,6 @@ def initialize_windows_and_trackbars():
     original_image_window_name = 'Original Image'
     create_window(original_image_window_name)
     create_trackbar(original_image_window_name, 'Contour size', 2500, 10000, lambda a: None)
-    create_trackbar(original_image_window_name, 'Precision', 0, 255, lambda a: None)
 
 # Function to obtain a binary image from a given image using a threshold value
 def get_binary_image(image, value):
@@ -73,23 +69,24 @@ def display_valid_shape(contour, shape_name, original_image):
 
 # Main function
 def main():
-    webcam = cv.VideoCapture(WEBCAM_ID)
+    webcam = cv.VideoCapture(constants.WEBCAM_ID)
     initialize_windows_and_trackbars()
     key = 'a'
 
+    # Define contour prototypes with corresponding names and thresholds
+    contour_and_contour_names = [
+        (get_contours_by_image(constants.SQUARE_PATH, 0), 'Square'),
+        (get_contours_by_image(constants.TRIANGLE_PATH, 0), 'Triangle'),
+        (get_contours_by_image(constants.CIRCLE_PATH, 0), 'Circle'),
+        (get_contours_by_image(constants.STAR_PATH, 0), 'Star'),
+    ]
+
+
     while key != ord('z'):
         # Get values from trackbars
-        shape_precision_threshold = cv.getTrackbarPos('Precision', 'Original Image')
         binary_value = cv.getTrackbarPos('Binary', 'Binary Image')
         radius = cv.getTrackbarPos('Noise', 'Binary Image')
         shape_contour_size = cv.getTrackbarPos('Contour size', 'Original Image')
-
-        # Define contour prototypes with corresponding names and thresholds
-        contour_and_contour_names = [
-            (get_contours_by_image(SQUARE_PATH, shape_precision_threshold), 'Square'),
-            (get_contours_by_image(TRIANGLE_PATH, shape_precision_threshold), 'Triangle'),
-            (get_contours_by_image(CIRCLE_PATH, shape_precision_threshold), 'Circle'),
-        ]
 
         _, original_image = webcam.read()
         original_image = cv.flip(original_image, 1)
@@ -112,7 +109,7 @@ def main():
                     display_invalid_shape(contour, original_image)
 
         cv.imshow('Original Image', original_image)
-        key = cv.waitKey(30)
+        key = cv.waitKey(1)
 
 if __name__ == "__main__":
     main()
