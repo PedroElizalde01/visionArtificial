@@ -8,7 +8,7 @@ from utils.label_converters import label_to_int
 trainData = []
 trainLabels = []
 
-# Agarro las cosas en los archivos las guardo en variables y las mando a train data y labels
+# Agarro las cosas en los data las guardo en variables y las mando a train data y labels
 def load_training_set():
     global trainData
     global trainLabels

@@ -3,44 +3,60 @@ import numpy as np
 
 WEBCAM_ID = 1
 
-def initialize_variables():
-    base_colours = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 255], [0, 0, 0], [100, 255, 0],
-                    [100, 0, 255], [0, 100, 255], [0, 255, 100], [255, 100, 0]]
-    frame_window = 'Frame-Window'
-    seeds_map_window = 'Seeds-Map-Window'
-    watershed_result_window = 'Watershed-Result-Window'
-    return base_colours, frame_window, seeds_map_window, watershed_result_window
+base_colours = [[255, 0, 0],
+                [0, 255, 0],
+                [0, 0, 255],
+                [255, 255, 255],
+                [0, 0, 0],
+                [100, 255, 0],
+                [100, 0, 255],
+                [0, 100, 255],
+                [0, 255, 100],
+                [255, 100, 0]]
+frame_window = 'Frame-Window'
+seeds_map_window = 'Seeds-Map-Window'
+watershed_result_window = 'Watershed-Result-Window'
 
-def initialize_webcam(webcam_id):
-    cap = cv2.VideoCapture(webcam_id)
-    _, frame = cap.read()
-    h, w, _ = frame.shape
-    seeds = np.zeros((h, w), np.uint8)
-    return cap, frame, seeds, (h, w)
+
+def watershed(img):
+    markers = cv2.watershed(img, np.int32(seeds))
+
+    img[markers == -1] = [0, 0, 255]
+    for n in range(1, 10):
+        img[markers == n] = base_colours[n]
+
+    cv2.imshow(watershed_result_window, img)
+
+    cv2.waitKey()
+
 
 def click_event(event, x, y, _flags, _params):
     if event == cv2.EVENT_LBUTTONDOWN:
         val = int(chr(selected_key))
         points.append(((x, y), val))
         cv2.circle(seeds, (x, y), 7, (val, val, val), thickness=-1)
-    return points, seeds
 
-def watershed(img, seeds, base_colours, watershed_result_window):
-    markers = cv2.watershed(img, np.int32(seeds))
-    img[markers == -1] = [0, 0, 255]
-    for n in range(1, 10):
-        img[markers == n] = base_colours[n]
-    cv2.imshow(watershed_result_window, img)
-    cv2.waitKey()
 
 def main():
-    base_colours, frame_window, seeds_map_window, watershed_result_window = initialize_variables()
-
-    cap, frame, seeds, sizeTuple = initialize_webcam(WEBCAM_ID)
-
+    global points
+    global seeds
+    global frame
+    global selected_key
     selected_key = 49  # 1 en ASCII
     points = []
 
+    cap = cv2.VideoCapture(WEBCAM_ID)
+    _, frame = cap.read()
+    h, w, _ = frame.shape
+
+    seeds = np.zeros((h, w), np.uint8)
+    cv2.namedWindow(frame_window)
+    cv2.namedWindow(seeds_map_window)
+
+    cv2.setMouseCallback(frame_window, click_event)
+    print('SPACE to watersheld')
+    print('(1 to 9) to change number')
+    print('q to quit')
     while True:
         _, frame = cap.read()
         frame_copy = frame.copy()
@@ -49,6 +65,7 @@ def main():
         for point in points:
             color = point[1]
             val = point[1] * 20
+
             x = point[0][0]
             y = point[0][1]
             cv2.circle(frame_copy, (x, y), 7, val, thickness=-1)
@@ -62,9 +79,9 @@ def main():
 
         key = cv2.waitKey(100) & 0xFF
         if key == 32:
-            watershed(frame.copy(), seeds, base_colours, watershed_result_window)
+            watershed(frame.copy())
             points = []
-            seeds = np.zeros(sizeTuple, np.uint8)
+            seeds = np.zeros(variables.sizeTuple, np.uint8)
 
         if ord('1') <= key <= ord('9'):
             selected_key = key
@@ -74,5 +91,6 @@ def main():
 
     cap.release()
 
+
 if __name__ == '__main__':
-        main()
+    main()
