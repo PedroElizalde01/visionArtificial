@@ -9,6 +9,10 @@ PREDICTOR_PATH = "data/knn_super_model.joblib"
 def initialize_webcam(window_name):
     webcam = cv.VideoCapture(WEBCAM_ID)
 
+    if not webcam.isOpened():
+        print(f"Error: Webcam with ID {WEBCAM_ID} failed to properly initialize.")
+        return None
+
     cv.namedWindow(window_name, cv.WINDOW_KEEPRATIO)
     cv.resizeWindow(window_name, 1200, 674)
 
@@ -27,7 +31,11 @@ def process_frame(webcam, window_name, denoise_trackbar, binary_trackbar, contou
     binary_value = cv.getTrackbarPos(binary_trackbar, window_name)
     radius = cv.getTrackbarPos(denoise_trackbar, window_name)
 
-    _, original_image = webcam.read()
+    ret, original_image = webcam.read()
+    if not ret:
+        print("Error: Failed to capture a frame from the webcam.")
+        return None, None
+
     original_image = cv.flip(original_image, 1)
 
     binary_image = hg.get_binary_image(original_image, binary_value)
@@ -40,7 +48,12 @@ def process_frame(webcam, window_name, denoise_trackbar, binary_trackbar, contou
 
 def main():
     window_name = "Image Processing"
-    webcam, _, denoise_trackbar_name, binary_trackbar_name, contour_size_trackbar_name = initialize_webcam(window_name)
+    webcam_info = initialize_webcam(window_name)
+
+    if webcam_info is None:
+        return
+
+    webcam, _, denoise_trackbar_name, binary_trackbar_name, contour_size_trackbar_name = webcam_info
 
     knn_super_model = joblib.load(PREDICTOR_PATH)
 
